@@ -20,7 +20,7 @@ const signupUserIntoDB = async (payload: IUser) => {
     const result = await pool.query(`
             INSERT INTO users (name, email, password, role) VALUES($1, $2, $3, $4) RETURNING
             id, name, email, role, created_at, update_at
-        `, [name, hashPassword, password, role]);
+        `, [name, hashPassword, email, role]);
 
     return result.rows[0];
 }
