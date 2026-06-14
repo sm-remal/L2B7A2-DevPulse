@@ -1,7 +1,10 @@
 import bcrypt from "bcryptjs";
 import { pool } from "../../db";
-import type { IUser } from "./auth.interface";
+import type { ILogin, IUser } from "./auth.interface";
+import config from "../../config";
+import jwt from "jsonwebtoken";
 
+// Signup
 const signupUserIntoDB = async (payload: IUser) => {
     const {name, email, password, role} = payload;
 
@@ -19,13 +22,67 @@ const signupUserIntoDB = async (payload: IUser) => {
 
     const result = await pool.query(`
             INSERT INTO users (name, email, password, role) VALUES($1, $2, $3, $4) RETURNING
-            id, name, email, role, created_at, update_at
-        `, [name, hashPassword, email, role]);
+            id, name, email, role, created_at, updated_at
+        `, [name, email, hashPassword, role]);
 
     return result.rows[0];
 }
 
 
+
+// Login
+const loginUserIntoDB = async (payload: ILogin) => {
+
+    const { email, password } = payload;
+
+    const result = await pool.query(
+        `SELECT * FROM users WHERE email = $1`,
+        [email]
+    );
+
+    if (result.rows.length === 0) {
+        throw new Error("User not found");
+    }
+
+    const user = result.rows[0];
+
+    const isPasswordMatch = await bcrypt.compare(
+        password,
+        user.password
+    );
+
+    if (!isPasswordMatch) {
+        throw new Error("Invalid password");
+    }
+
+    const token = jwt.sign(
+        {
+            id: user.id,
+            name: user.name,
+            role: user.role
+        },
+        config.jwt_secret as string,
+        {
+            expiresIn: "7d"
+        }
+    );
+
+    return {
+        token,
+        user: {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            created_at: user.created_at,
+            updated_at: user.updated_at
+        }
+    };
+};
+
+
+
 export const authService = {
     signupUserIntoDB,
+    loginUserIntoDB,
 }

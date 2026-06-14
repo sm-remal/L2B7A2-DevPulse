@@ -8,6 +8,7 @@ app.use(express.json())
 
 // API End Points
   app.use("/api/auth", authRouter);
+  app.use("api/auth/login", authRouter);
 
 
 app.get('/', (req: Request, res: Response) => {
