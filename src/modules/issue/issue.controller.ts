@@ -6,8 +6,7 @@ const createIssue = async (req: Request, res: Response) => {
 
     const reporter_id = req.user.id;
 
-    const result =
-        await issueService.createIssueIntoDB(
+    const result = await issueService.createIssueIntoDB(
             req.body,
             reporter_id
         );
@@ -23,8 +22,7 @@ const createIssue = async (req: Request, res: Response) => {
 // Get All
 const getAllIssues = async (req: Request, res: Response) => {
 
-    const result =
-        await issueService.getAllIssuesFromDB();
+    const result = await issueService.getAllIssuesFromDB();
 
     res.status(200).json({
         success: true,
@@ -50,7 +48,7 @@ const getSingleIssue = async (req: Request, res: Response) => {
 // Update
 const updateIssue = async (req: Request, res: Response) => {
 
-    const result =await issueService.updateIssueIntoDB(
+    const result = await issueService.updateIssueIntoDB(
             Number(req.params.id),
             req.body
         );
