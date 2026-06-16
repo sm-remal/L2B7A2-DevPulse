@@ -1,11 +1,8 @@
-import { Request, Response } from "express";
+import type { Request, Response } from "express";
 import { issueService } from "./issue.service";
 
 // Create
-const createIssue = async (
-    req: Request,
-    res: Response
-) => {
+const createIssue = async (req: Request, res: Response) => {
 
     const reporter_id = req.user.id;
 
@@ -24,10 +21,7 @@ const createIssue = async (
 
 
 // Get All
-const getAllIssues = async (
-    req: Request,
-    res: Response
-) => {
+const getAllIssues = async (req: Request, res: Response) => {
 
     const result =
         await issueService.getAllIssuesFromDB();
@@ -41,15 +35,9 @@ const getAllIssues = async (
 
 
 // Get Single
-const getSingleIssue = async (
-    req: Request,
-    res: Response
-) => {
+const getSingleIssue = async (req: Request, res: Response) => {
 
-    const result =
-        await issueService.getSingleIssueFromDB(
-            Number(req.params.id)
-        );
+    const result = await issueService.getSingleIssueFromDB(Number(req.params.id));
 
     res.status(200).json({
         success: true,
@@ -60,13 +48,9 @@ const getSingleIssue = async (
 
 
 // Update
-const updateIssue = async (
-    req: Request,
-    res: Response
-) => {
+const updateIssue = async (req: Request, res: Response) => {
 
-    const result =
-        await issueService.updateIssueIntoDB(
+    const result =await issueService.updateIssueIntoDB(
             Number(req.params.id),
             req.body
         );
@@ -80,10 +64,7 @@ const updateIssue = async (
 
 
 // Delete
-const deleteIssue = async (
-    req: Request,
-    res: Response
-) => {
+const deleteIssue = async (req: Request, res: Response) => {
 
     await issueService.deleteIssueFromDB(
         Number(req.params.id)
