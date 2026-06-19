@@ -5,16 +5,24 @@ type TResponse<T> = {
     success: boolean;
     message: string;
     data?: T;
-    error?: any;
+    errors?: unknown;
 }
 
 const sendResponse = <T>(res: Response, data: TResponse<T>) => {
-    res.status(data.statusCode).json({
+    const payload: Record<string, unknown> = {
         success: data.success,
         message: data.message,
-        data: data.data,
-        error: data.error,
-    })
+    };
+
+    if (typeof data.data !== "undefined") {
+        payload.data = data.data;
+    }
+
+    if (typeof data.errors !== "undefined") {
+        payload.errors = data.errors;
+    }
+
+    res.status(data.statusCode).json(payload);
 }
 
 export default sendResponse;

@@ -1,51 +1,30 @@
 import type { Request, Response } from "express";
 import { authService } from "./auth.service";
 import sendResponse from "../../utility/sendResponse";
+import { RESPONSE_MESSAGES } from "../../utility/responseMessages";
 
 // Signup
 const signupUser = async (req: Request, res: Response) => {
-    try {
-        const result = await authService.signupUserIntoDB(req.body);
-     
-        sendResponse(res, {
-            statusCode: 201,
-            success: true,
-            message: "User registered successfully",
-            data: result,
-        })
+    const result = await authService.signupUserIntoDB(req.body);
 
-    } catch (error: any) {
-       
-        sendResponse(res, {
-            statusCode: 500,
-            success: false,
-            message: error.message,
-            error: error,
-        })
-    }
+    sendResponse(res, {
+        statusCode: 201,
+        success: true,
+        message: RESPONSE_MESSAGES.auth.signupSuccess,
+        data: result,
+    })
 }
 
 // Login
 const loginUser = async (req: Request, res: Response) => {
-    try {
-        const result = await authService.loginUserIntoDB(req.body);
+    const result = await authService.loginUserIntoDB(req.body);
 
-        sendResponse(res, {
-            statusCode: 200,
-            success: true,
-            message: "Login successful",
-            data: result,
-        })
-
-    } catch (error: any) {
-        
-        sendResponse(res, {
-            statusCode: 500,
-            success: false,
-            message: error.message,
-            error: error,
-        })
-    }
+    sendResponse(res, {
+        statusCode: 200,
+        success: true,
+        message: RESPONSE_MESSAGES.auth.loginSuccess,
+        data: result,
+    })
 }
 
 export const authController = {

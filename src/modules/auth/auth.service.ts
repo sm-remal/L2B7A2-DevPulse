@@ -1,31 +1,65 @@
 import bcrypt from "bcryptjs";
-import { pool } from "../../db";
 import type { ILogin, IUser } from "./auth.interface";
 import config from "../../config";
 import jwt from "jsonwebtoken";
+import AppError from "../../utility/AppError";
+import { userService } from "../user/user.service";
+import type { IPublicUser } from "../user/user.interface";
+import { pool } from "../../db";
 
 // Signup
-const signupUserIntoDB = async (payload: IUser) => {
-    const {name, email, password, role} = payload;
+const signupUserIntoDB = async (payload: IUser): Promise<IPublicUser> => {
+    const { name, email, password, role } = payload;
+
+    if (!name?.trim()) {
+        throw new AppError(400, "Name is required");
+    }
+
+    if (!email?.trim()) {
+        throw new AppError(400, "Email is required");
+    }
+
+    if (!password) {
+        throw new AppError(400, "Password is required");
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+        throw new AppError(400, "Invalid email address");
+    }
+
+    const normalizedRole = role ?? "contributor";
+
+    if (normalizedRole !== "contributor" && normalizedRole !== "maintainer") {
+        throw new AppError(400, "Invalid role");
+    }
 
     // Check Email is Exist
-    const isUserExist = await pool.query(`
-            SELECT * FROM users WHERE email = $1
-        `, [email]);
+    const isUserExist = await userService.findUserByEmail(normalizedEmail);
 
-    if (isUserExist.rows.length > 0) {
-        throw new Error("Email is exist !!");
+    if (isUserExist) {
+        throw new AppError(409, "Email already exists");
     }
 
     // Hash Password
     const hashPassword = await bcrypt.hash(password, 10);
 
-    const result = await pool.query(`
-            INSERT INTO users (name, email, password, role) VALUES($1, $2, $3, $4) RETURNING
-            id, name, email, role, created_at, updated_at
-        `, [name, email, hashPassword, role]);
+    const result = await pool.query<IPublicUser>(
+        `
+            INSERT INTO users (name, email, password, role)
+            VALUES($1, $2, $3, $4)
+            RETURNING id, name, email, role, created_at, updated_at
+        `,
+        [name.trim(), normalizedEmail, hashPassword, normalizedRole]
+    );
 
-    return result.rows[0];
+    const createdUser = result.rows[0];
+    if (!createdUser) {
+        throw new AppError(500, "Failed to register user");
+    }
+
+    return createdUser;
 }
 
 
@@ -34,17 +68,14 @@ const signupUserIntoDB = async (payload: IUser) => {
 const loginUserIntoDB = async (payload: ILogin) => {
 
     const { email, password } = payload;
-
-    const result = await pool.query(
-        `SELECT * FROM users WHERE email = $1`,
-        [email]
-    );
-
-    if (result.rows.length === 0) {
-        throw new Error("User not found");
+    if (!email?.trim() || !password) {
+        throw new AppError(400, "Email and password are required");
     }
 
-    const user = result.rows[0];
+    const user = await userService.findUserByEmail(email.trim().toLowerCase());
+    if (!user) {
+        throw new AppError(401, "Invalid credentials");
+    }
 
     const isPasswordMatch = await bcrypt.compare(
         password,
@@ -52,7 +83,7 @@ const loginUserIntoDB = async (payload: ILogin) => {
     );
 
     if (!isPasswordMatch) {
-        throw new Error("Invalid password");
+        throw new AppError(401, "Invalid credentials");
     }
 
     const token = jwt.sign(
@@ -61,7 +92,7 @@ const loginUserIntoDB = async (payload: ILogin) => {
             name: user.name,
             role: user.role
         },
-        config.jwt_secret as string,
+        config.jwt_secret,
         {
             expiresIn: "7d"
         }

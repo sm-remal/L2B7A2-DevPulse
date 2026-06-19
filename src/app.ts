@@ -3,14 +3,12 @@ import { authRouter } from "./modules/auth/auth.route"
 import { issueRoute } from "./modules/issue/issue.route"
 import globalErrorHandler from "./middleware/globalErrorHandler"
 const app = express()
-const port = 5000
 
 // Middleware
 app.use(express.json())
 
 // API End Points
 app.use("/api/auth", authRouter);
-app.use("/api/auth/login", authRouter);
 app.use("/api/issues", issueRoute);
 
 

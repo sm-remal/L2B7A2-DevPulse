@@ -1,10 +1,10 @@
 import {Router} from "express"
-import app from "../../app"
 import { authController } from "./auth.controller";
+import asyncHandler from "../../utility/asyncHandler";
 
 const route = Router();
 
-route.post("/signup", authController.signupUser);
-route.post("/login", authController.loginUser);
+route.post("/signup", asyncHandler(authController.signupUser));
+route.post("/login", asyncHandler(authController.loginUser));
 
 export const authRouter = route;

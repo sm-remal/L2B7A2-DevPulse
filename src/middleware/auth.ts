@@ -1,42 +1,38 @@
 import type { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
+import jwt, { type JwtPayload } from "jsonwebtoken";
 import config from "../config";
+import AppError from "../utility/AppError";
+
+export type AuthRole = "contributor" | "maintainer";
+
+export interface AuthTokenPayload extends JwtPayload {
+    id: number;
+    name: string;
+    role: AuthRole;
+}
 
 declare global {
     namespace Express {
         interface Request {
-            user: any;
+            user: AuthTokenPayload;
         }
     }
 }
 
 const auth = (req: Request, res: Response, next: NextFunction) => {
-
     try {
-
-        const token = req.headers.authorization;
+        const header = req.headers.authorization;
+        const token = header?.startsWith("Bearer ") ? header.slice(7) : header;
 
         if (!token) {
-            return res.status(401).json({
-                success: false,
-                message: "Unauthorized Access"
-            });
+            throw new AppError(401, "Unauthorized");
         }
 
-        const decoded = jwt.verify(
-            token,
-            config.jwt_secret as string
-        );
-
+        const decoded = jwt.verify(token, config.jwt_secret) as AuthTokenPayload;
         req.user = decoded;
-
         next();
-
-    } catch (error) {
-        return res.status(401).json({
-            success: false,
-            message: "Invalid Token"
-        });
+    } catch {
+        next(new AppError(401, "Unauthorized"));
     }
 };
 
