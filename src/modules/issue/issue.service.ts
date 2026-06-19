@@ -234,7 +234,7 @@ const getSingleIssueFromDB = async (id: number) => {
 };
 
 // Update Issue
-const updateIssueIntoDB = async (id: number, payload: IUpdateIssue, requester: AuthTokenPayload) => {
+const updateIssueIntoDB = async (id: number, payload: IUpdateIssue, requester: AuthTokenPayload): Promise<IIssueRow> => {
     validateIssueId(id);
 
     const existingIssueResult = await pool.query<IIssueRow>(
@@ -293,12 +293,8 @@ const updateIssueIntoDB = async (id: number, payload: IUpdateIssue, requester: A
     if (!issue) {
         throw new AppError(500, "Failed to update issue");
     }
-    const reporter = await userService.findUserById(issue.reporter_id);
-    const reporterMap = new Map(
-        reporter ? [[reporter.id, { id: reporter.id, name: reporter.name, role: reporter.role }]] : []
-    );
 
-    return mapIssueWithReporter(issue, reporterMap);
+    return issue;
 };
 
 // Delete Issue
