@@ -1,6 +1,6 @@
 # B7A2
 
-# 🚼 DevPulse – Assignment Requirements Specification
+# 🚼 DevPulse – Assignment Requirements
 
 > Internal Tech Issue & Feature Tracker
 > 
